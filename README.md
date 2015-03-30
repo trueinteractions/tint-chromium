@@ -23,6 +23,11 @@ It adds the additional functionality:
 * New event 'console' (with the passed in console message, source, and line for the callback)
 
 
+### Install ###
+```bash
+$ npm install chromium
+```
+
 ### Example ###
 
 ```javascript
