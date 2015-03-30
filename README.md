@@ -2,15 +2,17 @@
 
 Use chromium as a control in Tint (v2).
 
-Tint: https://www.trueinteractions.com/tint2/docs/
-Tint @ GitHub: https://www.github.com/trueinteractions/tint2/
-Chromium-Tint: https://www.github.com/trueinteractions/tint-chromium/
+Tint: <https://www.trueinteractions.com/tint2/docs/>
+
+Tint @ GitHub: <https://www.github.com/trueinteractions/tint2/>
+
+Chromium-Tint: <https://www.github.com/trueinteractions/tint-chromium/>
 
 ### API ###
 
 This follows the same API and functionality as:
 
-https://www.trueinteractions.com/tint2/docs/WebView.html
+<https://www.trueinteractions.com/tint2/docs/WebView.html>
 
 It adds the additional functionality:
 
