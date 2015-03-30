@@ -21,3 +21,18 @@ It adds the additional functionality:
 * Open/close the dev tools via chromium.devtools = true
 * New event 'status' (with the passed in status string)
 * New event 'console' (with the passed in console message, source, and line for the callback)
+
+
+### Example ###
+
+```javascript
+require('Common');
+Chromium = require('chromium');
+
+var win = new Window();
+var webview = new Chromium();
+win.appendChild(webview);
+webview.left = webview.right = webview.top = webview.bottom = 0;
+webview.location = "https://www.trueinteractions.com/tint2/docs/";
+win.visible = true;
+```

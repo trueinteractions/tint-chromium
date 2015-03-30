@@ -29,7 +29,7 @@ module.exports = (function() {
     this.nativeClass =  this.nativeClass || $.CefSharp.Wpf.ChromiumWebBrowser;
     this.nativeViewClass = this.nativeViewClass || $.CefSharp.Wpf.ChromiumWebBrowser;
     Container.call(this, options);
-    this.nativeView.SetDpiAware();
+    //this.nativeView.SetDpiAware();
     this.private.devtools = false;
     function callbackHandle(str) { this.fireEvent('message',[str]); }
     var scriptInterface = process.bridge.createScriptInterface(callbackHandle.bind(this));
