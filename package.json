@@ -1,0 +1,27 @@
+{
+  "name": "chromium",
+  "version": "3.2171.2069",
+  "description": "Chromium Embedded Framework for Tint",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/trueinteractions/tint-chromium"
+  },
+  "keywords": [
+    "chromium",
+    "chrome",
+    "tint"
+  ],
+  "author": "True Interactions",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/trueinteractions/tint-chromium/issues"
+  },
+  "homepage": "https://github.com/trueinteractions/tint-chromium"
+}
