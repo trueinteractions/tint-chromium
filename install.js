@@ -1,0 +1,5 @@
+if(process.platform !== 'darwin') {
+	require('child_process').spawn('install.bat',{ stdio:'inherit' });
+} else {
+
+}

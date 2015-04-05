@@ -1,5 +1,5 @@
 require('Common');
-Chromium = require('../win/Chromium');
+Chromium = require('../Chromium');
 var win = new Window();
 var chromium = new Chromium();
 chromium.left = chromium.right = chromium.top = chromium.bottom = 0;
