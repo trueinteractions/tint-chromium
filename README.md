@@ -24,8 +24,17 @@ It adds the additional functionality:
 
 
 ### Install ###
+
+Install from NPM:
+
 ```bash
 $ npm install chromium
+```
+Or, Install from Github:
+```bash
+$ git clone https://github.com/trueinteractions/tint-chromium.git
+$ cd tint-chromium
+$ install.[bat|sh]
 ```
 
 ### Example ###
