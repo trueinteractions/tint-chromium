@@ -23,3 +23,4 @@ for /D %%i in (CefSharp.*) do rmdir /q/s %%i >nul 2>&1
 
 del nuget.exe >nul 2>&1
 
+copy /Y CefSharp.InterfacesToEvents.dll bin\win\

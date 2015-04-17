@@ -5,9 +5,11 @@ module.exports = (function() {
   var path = require('path');
   var execpath = path.dirname(require.resolve('./Chromium.js'));
   process.bridge.dotnet.import(path.join(execpath,'bin/win/CefSharp.dll'));
-  console.log(path.join(execpath,'bin/win/CefSharp.Core.dll'));
   process.bridge.dotnet.import(path.join(execpath,'bin/win/CefSharp.Core.dll'));
   process.bridge.dotnet.import(path.join(execpath,'bin/win/CefSharp.Wpf.dll'));
+  process.bridge.dotnet.import(path.join(execpath,'bin/win/CefSharp.InterfacesToEvents.dll'));
+
+
   var util = require('Utilities');
   var Container = require('Container');
   var $ = process.bridge.dotnet;
@@ -25,13 +27,24 @@ module.exports = (function() {
   //schema.CefSharpSchemeHandlerFactory
 
   function Chromium(options) {
+
     options = options || {};
     options.nonStandardEvents = true;
     this.nativeClass =  this.nativeClass || $.CefSharp.Wpf.ChromiumWebBrowser;
     this.nativeViewClass = this.nativeViewClass || $.CefSharp.Wpf.ChromiumWebBrowser;
     Container.call(this, options);
-    //this.nativeView.SetDpiAware();
     this.private.devtools = false;
+
+    // Create the interface to bind interfaces
+    // to events.
+    var eventDelegate = new $.CefSharp.InterfacesToEvents.InterfacesToEvents();
+    this.nativeView.DialogHandler = eventDelegate;
+    this.nativeView.JsDialogHandler = eventDelegate;
+    this.nativeView.RequestHandler = eventDelegate;
+    this.nativeView.DownloadHandler = eventDelegate;
+    this.nativeView.LifeSpanHandler = eventDelegate;
+    this.nativeView.MenuHandler = eventDelegate;
+
     function callbackHandle(str) { this.fireEvent('message',[str]); }
     var scriptInterface = process.bridge.createScriptInterface(callbackHandle.bind(this));
     this.nativeView.RegisterJsObject("TintMessages", scriptInterface);
@@ -40,13 +53,12 @@ module.exports = (function() {
     // Url, IsMainFrame
     this.private.frameLoadStart = function(frame) {
       try {
-        if(frame.IsMainFrame) {
-          this.fireEvent('loading', [frame.Url]);
-          if(previousUrl !== frame.Url) {
-            this.fireEvent('location-change', [previousUrl, frame.Url]);
-            previousUrl = frame.Url;
-          }
+        this.fireEvent('loading', [frame.Url]);
+        if(previousUrl !== frame.Url) {
+          this.fireEvent('location-change', [previousUrl, frame.Url]);
+          previousUrl = frame.Url;
         }
+        this.nativeView.EvaluateScriptAsync('window.postMessageToHost = function(e) { TintMessages.postMessageBackOnMain(e); }');
       } catch (e) {
         console.log('error in frame load');
         console.log(e);
@@ -56,15 +68,12 @@ module.exports = (function() {
     // Url, IsMainFrame, HttpStatusCode
     this.private.frameLoadEnd = function(frame) {
       try {
-        if(frame.IsMainFrame) {
-          if(firstLoad) {
-            firstLoad = false;
-          } else {
-            this.fireEvent('unload');
-          }
-          this.fireEvent('load', [frame.Url, frame.HttpStatusCode]);
+        if(firstLoad) {
+          firstLoad = false;
+        } else {
+          this.fireEvent('unload');
         }
-
+        this.fireEvent('load', [frame.Url, frame.HttpStatusCode]);
       } catch (e) {
         console.log(e);
         process.exit(1);
@@ -89,13 +98,37 @@ module.exports = (function() {
     this.private.consoleMessage = function(consoleMessage) {
       this.fireEvent('console', [consoleMessage.Message, consoleMessage.Source, consoleMessage.Line]); 
     };
-    
+    this.private.policyHandler = function(sender, object) {
+      var obj = $.fromPointer(object);
+      var res = this.fireEvent('policy', [ obj.request.Url]);
+      obj.shouldCancelResource = res ? true : false;
+    };
+    this.private.newWindowHandler = function(sender, object) {
+      var obj = $.fromPointer(object);
+      var newWebview = new Chromium();
+      var result = this.fireEvent('new-window', [newWebview]);
+      if(result) {
+        newWebView.location = obj.targetUrl;
+      }
+      newWebview.showPopUp = false;
+    }
+
     this.nativeView.addEventListener('FrameLoadStart', this.private.frameLoadStart.bind(this));
     this.nativeView.addEventListener('FrameLoadEnd', this.private.frameLoadEnd.bind(this));
     this.nativeView.addEventListener('LoadError', this.private.loadError.bind(this));
     this.nativeView.addEventListener('NavStateChanged', this.private.navStateChanged.bind(this));
     this.nativeView.addEventListener('StatusMessage', this.private.statusMessage.bind(this));
     this.nativeView.addEventListener('ConsoleMessage', this.private.consoleMessage.bind(this));
+
+    // Events from delegates:
+    //
+    // FileDialog, JSAlert, JSConfirm, JSPrompt, JSBeforeUnload. BeforeBrowser
+    // CertificateError, PluginCrashed, BeforeResourceLoad, AuthCredentials, BeforePluginLoad
+    // RenderProcessTerminated, BeforeDownload, DownloadUpdated, BeforePopUp, BeforeClose
+    //
+    eventDelegate.addEventListener('BeforeResourceLoad', this.private.policyHandler.bind(this));
+    eventDelegate.addEventListener('BeforePopUp', this.private.newWindowHandler.bind(this));
+
   }
 
   Chromium.prototype = Object.create(Container.prototype);
@@ -109,14 +142,21 @@ module.exports = (function() {
   }
 
   Chromium.prototype.postMessage = function(e) {
+    var payload = 'var msg = document.createEvent("MessageEvent");\n'+
+    'msg.initMessageEvent("message",true,true,\''+e.toString().replace(/'/g,"\\'")+'\',window.location.protocol + "//" + window.location.host, 12, window, null);\n'+
+    'window.dispatchEvent(msg);\n';
+    this.nativeView.EvaluateScriptAsync(payload);
   }
 
   Chromium.prototype.execute = function(e, cb) {
-    this.nativeView.ExecuteScriptAsync(e);
+    var taskRunner = this.nativeView.EvaluateScriptAsync(e);
+    taskRunner.Wait();
+    cb(taskRunner.Result.Result);
   }
 
+  // TODO
   util.def(Chromium.prototype, 'progress',
-    function() { }
+    function() { return -1; }
   );
 
   util.def(Chromium.prototype, 'location',
