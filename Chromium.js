@@ -16,18 +16,20 @@ module.exports = (function() {
 
   var settings = new $.CefSharp.CefSettings();
   settings.BrowserSubprocessPath = path.join(execpath,'bin/win/CefSharp.BrowserSubprocess.exe');
+
+  var customSchema = new $.CefSharp.CefCustomScheme();
+  customSchema.SchemeName = "app";
+  customSchema.SchemeHandlerFactory = new $.CefSharp.InterfacesToEvents.AppSchemaChromiumHandler();
+  customSchema.IsLocal = false;
+  customSchema.IsStandard = false;
+  settings.RegisterScheme(customSchema);
   $.CefSharp.Cef.Initialize(settings);
 
   process.on('exit', function() {
     $.CefSharp.Cef.Shutdown();
   });
-  
-  //var schema = new $.CefSharp.CefCustomScheme();
-  //schema.SchemaName = "app";
-  //schema.CefSharpSchemeHandlerFactory
 
   function Chromium(options) {
-
     options = options || {};
     options.nonStandardEvents = true;
     this.nativeClass =  this.nativeClass || $.CefSharp.Wpf.ChromiumWebBrowser;
@@ -99,18 +101,27 @@ module.exports = (function() {
       this.fireEvent('console', [consoleMessage.Message, consoleMessage.Source, consoleMessage.Line]); 
     };
     this.private.policyHandler = function(sender, object) {
-      var obj = $.fromPointer(object);
-      var res = this.fireEvent('policy', [ obj.request.Url]);
-      obj.shouldCancelResource = res ? true : false;
+      try {
+        var obj = $.fromPointer(object);
+        var res = this.fireEvent('policy', [ obj.request.Url]);
+        obj.shouldCancelResource = res ? true : false;
+      } catch (e) {
+        console.log(e);
+        process.exit(1);
+      }
     };
     this.private.newWindowHandler = function(sender, object) {
-      var obj = $.fromPointer(object);
-      var newWebview = new Chromium();
-      var result = this.fireEvent('new-window', [newWebview]);
-      if(result) {
-        newWebView.location = obj.targetUrl;
+      try {
+        var obj = $.fromPointer(object);
+        var newWebview = new Chromium();
+        this.fireEvent('new-window', [newWebview]);
+        console.log('setting to location: ', obj.targetUrl);
+        setTimeout(function() { newWebview.location = obj.targetUrl; }, 100);
+        obj.shouldCancelPopUp = true;
+      } catch (e) {
+        console.log(e);
+        process.exit(1);
       }
-      newWebview.showPopUp = false;
     }
 
     this.nativeView.addEventListener('FrameLoadStart', this.private.frameLoadStart.bind(this));
@@ -149,9 +160,14 @@ module.exports = (function() {
   }
 
   Chromium.prototype.execute = function(e, cb) {
-    var taskRunner = this.nativeView.EvaluateScriptAsync(e);
-    taskRunner.Wait();
-    cb(taskRunner.Result.Result);
+    try {
+      var taskRunner = this.nativeView.EvaluateScriptAsync(e);
+      taskRunner.Wait(1000);
+      setTimeout(function() { cb(taskRunner.Result.Result); }, 10);
+    } catch (e) {
+      console.log(e);
+      process.exit(1);
+    }
   }
 
   // TODO
@@ -161,21 +177,21 @@ module.exports = (function() {
 
   util.def(Chromium.prototype, 'location',
     function() { return this.nativeView.Address },
-    function(url) { this.nativeView.Address = url; }
+    function(url) { setTimeout(function() { this.nativeView.Load(url); }.bind(this), 100); }
   );
 
   util.def(Chromium.prototype, "useragent",
     function() { return settings.UserAgent; },
-    function(e) { settings.UserAgent = e; }
+    function(e) { throw new Error('The user agent for Windows Chromium cannot be changed. yet.') }
   );
 
   util.def(Chromium.prototype, "devtools",
     function() { return this.private.devtools; },
     function(e) {
       if(e) {
-        this.nativeView.ShowDevTools();
+        setTimeout(function() { this.nativeView.ShowDevTools(); }.bind(this), 100);
       } else {
-        this.nativeView.CloseDevTools();
+        setTimeout(function() { this.nativeView.CloseDevTools();  }.bind(this), 100);
       }
       this.private.devtools = e ? true : false;
     }

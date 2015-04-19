@@ -15,9 +15,10 @@ function baseline() {
  * @example
  */
 function run($utils) {
+  var Chromium = require('../Chromium');
   var mainWindow = new Window();
   mainWindow.visible = true;
-  var webview = new WebView();
+  var webview = new Chromium();
   mainWindow.appendChild(webview);
   webview.left = webview.right = webview.bottom = webview.top = 0;
   var agent = "This is my user agent.";
@@ -45,5 +46,5 @@ module.exports = {
   run:run, 
   shutdown:shutdown, 
   shell:false,
-  name:"WebViewUserAgent",
+  name:"ChromiumUserAgent",
 };

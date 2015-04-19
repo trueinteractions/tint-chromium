@@ -15,9 +15,10 @@ function baseline() {
  * @example
  */
 function run($utils) {
+  var Chromium = require('../Chromium');
   var mainWindow = new Window();
   mainWindow.visible = true;
-  var webview = new WebView();
+  var webview = new Chromium();
   mainWindow.appendChild(webview);
   webview.left = webview.right = webview.top = webview.bottom = 0;
   webview.location = 'app://assets/webview-echo-test.html';
@@ -42,5 +43,5 @@ module.exports = {
   shutdown:shutdown, 
   shell:false,
   timeout:true,
-  name:"WebViewExecuteJS",
+  name:"ChromiumExecuteJS",
 };

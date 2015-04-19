@@ -15,15 +15,16 @@ function baseline() {
  * @example
  */
 function run($utils) {
+  var Chromium = require('../Chromium');
   var themessage = "Hello "+Math.random();
   var mainWindow = new Window();
   mainWindow.visible = true;
-  var webview = new WebView();
+  var webview = new Chromium();
   mainWindow.appendChild(webview);
   webview.left = webview.right = webview.top = webview.bottom = 0;
   webview.addEventListener('message', function(e) {
-    /* @hidden */ $utils.assert(e == themessage);
-    /* @hidden */ $utils.ok();
+    $utils.assert(e == themessage);
+     $utils.ok();
   });
   webview.addEventListener('load', function() {
     webview.postMessage(themessage);
@@ -44,5 +45,5 @@ module.exports = {
   shutdown:shutdown, 
   shell:false,
   timeout:true,
-  name:"WebViewCommunicationTest",
+  name:"ChromiumCommunicationTest",
 };

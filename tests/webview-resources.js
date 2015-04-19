@@ -15,9 +15,9 @@ function baseline() {
  * @example
  */
 function run($utils) {
-
+  var Chromium = require('../Chromium');
   var win = new Window();
-  var webview = new WebView();
+  var webview = new Chromium();
 
   win.appendChild(webview);
   webview.addEventListener('message', function(e) {
@@ -43,6 +43,6 @@ module.exports = {
   shutdown:shutdown, 
   shell:false,
   timeout:true,
-  name:"WebViewResources",
+  name:"ChromiumResources",
 };
 

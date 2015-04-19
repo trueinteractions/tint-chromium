@@ -15,10 +15,10 @@ function baseline() {
  * @example
  */
 function run($utils) {
-  //$utils.ok();
+  var Chromium = require('../Chromium');
   var mainWindow = new Window();
   mainWindow.visible = true;
-  var webview = new WebView();
+  var webview = new Chromium();
   mainWindow.appendChild(webview);
   webview.left = webview.right = webview.top = webview.bottom = 0;
   
@@ -64,5 +64,5 @@ module.exports = {
   shutdown:shutdown, 
   shell:false,
   timeout:true,
-  name:"WebViewNewWindow",
+  name:"ChromiumNewWindow",
 };
