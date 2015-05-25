@@ -49,7 +49,7 @@ module.exports = (function() {
 
     function callbackHandle(str) { this.fireEvent('message',[str]); }
     var scriptInterface = process.bridge.createScriptInterface(callbackHandle.bind(this));
-    this.nativeView.RegisterJsObject("TintMessages", scriptInterface);
+    this.nativeView.RegisterJsObject("TintMessages", scriptInterface, true);
     var previousUrl = null, firstLoad = true;
 
     // Url, IsMainFrame
