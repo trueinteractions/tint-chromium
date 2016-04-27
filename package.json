@@ -1,6 +1,6 @@
 {
   "name": "chromium",
-  "version": "3.2171.3007",
+  "version": "3.2171.3008",
   "description": "Chromium Embedded Framework for Tint",
   "main": "index.js",
   "directories": {

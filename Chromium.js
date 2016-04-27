@@ -6,7 +6,6 @@ module.exports = (function() {
   var execpath = path.dirname(require.resolve('./Chromium.js'));
   var Chromium = null;
   if(process.platform === 'darwin') {
-    console.log('osx');
     var Control = require('Control');
     var util = require('Utilities');
     $ = process.bridge.objc;
@@ -146,7 +145,6 @@ module.exports = (function() {
     process.bridge.dotnet.import(path.join(execpath,'bin/win/CefSharp.dll'));
     process.bridge.dotnet.import(path.join(execpath,'bin/win/CefSharp.Core.dll'));
     process.bridge.dotnet.import(path.join(execpath,'bin/win/CefSharp.Wpf.dll'));
-    process.bridge.dotnet.import(path.join(execpath,'bin/win/CefSharp.InterfacesToEvents.dll'));
 
     var util = require('Utilities');
     var Container = require('Container');
@@ -156,11 +154,11 @@ module.exports = (function() {
     settings.BrowserSubprocessPath = path.join(execpath,'bin/win/CefSharp.BrowserSubprocess.exe');
 
     var customSchema = new $.CefSharp.CefCustomScheme();
-    customSchema.SchemeName = "app";
-    customSchema.SchemeHandlerFactory = new $.CefSharp.InterfacesToEvents.AppSchemaChromiumHandler();
-    customSchema.IsLocal = false;
-    customSchema.IsStandard = false;
-    settings.RegisterScheme(customSchema);
+    //customSchema.SchemeName = "app";
+    //customSchema.SchemeHandlerFactory = new $.CefSharp.InterfacesToEvents.AppSchemaChromiumHandler();
+    //customSchema.IsLocal = false;
+    //customSchema.IsStandard = false;
+    //settings.RegisterScheme(customSchema);
     $.CefSharp.Cef.Initialize(settings);
 
     process.on('exit', function() {
@@ -177,13 +175,13 @@ module.exports = (function() {
 
       // Create the interface to bind interfaces
       // to events.
-      var eventDelegate = new $.CefSharp.InterfacesToEvents.InterfacesToEvents();
-      this.nativeView.DialogHandler = eventDelegate;
-      this.nativeView.JsDialogHandler = eventDelegate;
-      this.nativeView.RequestHandler = eventDelegate;
-      this.nativeView.DownloadHandler = eventDelegate;
-      this.nativeView.LifeSpanHandler = eventDelegate;
-      this.nativeView.MenuHandler = eventDelegate;
+      // var eventDelegate = new $.CefSharp.InterfacesToEvents.InterfacesToEvents();
+      // this.nativeView.DialogHandler = eventDelegate;
+      // this.nativeView.JsDialogHandler = eventDelegate;
+      // this.nativeView.RequestHandler = eventDelegate;
+      // this.nativeView.DownloadHandler = eventDelegate;
+      // this.nativeView.LifeSpanHandler = eventDelegate;
+      // this.nativeView.MenuHandler = eventDelegate;
 
       function callbackHandle(str) { this.fireEvent('message',[str]); }
       var scriptInterface = process.bridge.createScriptInterface(callbackHandle.bind(this));
@@ -198,7 +196,8 @@ module.exports = (function() {
             this.fireEvent('location-change', [previousUrl, frame.Url]);
             previousUrl = frame.Url;
           }
-          this.nativeView.EvaluateScriptAsync('window.postMessageToHost = function(e) { TintMessages.postMessageBackOnMain(e); }');
+          // TODO: Fix, evaluatescriptasync is no longer a function...
+          this.nativeView.GetBrowser().MainFrame.EvaluateScriptAsync('window.postMessageToHost = function(e) { TintMessages.postMessageBackOnMain(e); }', null);
         } catch (e) {
           console.log('error in frame load');
           console.log(e);
@@ -264,7 +263,7 @@ module.exports = (function() {
       this.nativeView.addEventListener('FrameLoadStart', this.private.frameLoadStart.bind(this));
       this.nativeView.addEventListener('FrameLoadEnd', this.private.frameLoadEnd.bind(this));
       this.nativeView.addEventListener('LoadError', this.private.loadError.bind(this));
-      this.nativeView.addEventListener('NavStateChanged', this.private.navStateChanged.bind(this));
+      this.nativeView.addEventListener('LoadingStateChanged', this.private.navStateChanged.bind(this));
       this.nativeView.addEventListener('StatusMessage', this.private.statusMessage.bind(this));
       this.nativeView.addEventListener('ConsoleMessage', this.private.consoleMessage.bind(this));
 
@@ -274,8 +273,8 @@ module.exports = (function() {
       // CertificateError, PluginCrashed, BeforeResourceLoad, AuthCredentials, BeforePluginLoad
       // RenderProcessTerminated, BeforeDownload, DownloadUpdated, BeforePopUp, BeforeClose
       //
-      eventDelegate.addEventListener('BeforeResourceLoad', this.private.policyHandler.bind(this));
-      eventDelegate.addEventListener('BeforePopUp', this.private.newWindowHandler.bind(this));
+      //eventDelegate.addEventListener('BeforeResourceLoad', this.private.policyHandler.bind(this));
+      //eventDelegate.addEventListener('BeforePopUp', this.private.newWindowHandler.bind(this));
 
     }
 
@@ -293,12 +292,12 @@ module.exports = (function() {
       var payload = 'var msg = document.createEvent("MessageEvent");\n'+
       'msg.initMessageEvent("message",true,true,\''+e.toString().replace(/'/g,"\\'")+'\',window.location.protocol + "//" + window.location.host, 12, window, null);\n'+
       'window.dispatchEvent(msg);\n';
-      this.nativeView.EvaluateScriptAsync(payload);
+      this.nativeView.GetBrowser().MainFrame.EvaluateScriptAsync(payload, null);
     }
 
     Chromium.prototype.execute = function(e, cb) {
       try {
-        var taskRunner = this.nativeView.EvaluateScriptAsync(e);
+        var taskRunner = this.nativeView.GetBrowser().MainFrame.EvaluateScriptAsync(e, null);
         taskRunner.Wait(1000);
         setTimeout(function() { cb(taskRunner.Result.Result); }, 10);
       } catch (e) {

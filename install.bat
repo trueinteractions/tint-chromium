@@ -18,6 +18,7 @@ for /F %%i in (' "dir *.dll /b/s | findstr /rc:"cef.redist.x64" | findstr /rvc:"
 for /F %%i in (' "dir *.dll /b/s | findstr /rc:"CefSharp." | findstr /rvc:"x86" | findstr /rvc:"bin\\win"" ') do copy /y %%i %CD%\bin\win\  >nul 2>&1
 for /F %%i in (' "dir *.exe /b/s | findstr /rc:"CefSharp." | findstr /rvc:"x86" | findstr /rvc:"bin\\win"" ') do copy /y %%i %CD%\bin\win\  >nul 2>&1
 for /F %%i in (' "dir icudtl.dat /b/s | findstr /rc:"cef.redist.x64" | findstr /rvc:"bin\\win"" ') do copy /y %%i %CD%\bin\win >nul 2>&1
+for /F %%i in (' "dir *.bin /b/s | findstr /rc:"cef.redist.x64" | findstr /rvc:"bin\\win"" ') do copy /y %%i %CD%\bin\win >nul 2>&1
 for /D %%i in (cef.redist.*) do rmdir /q/s %%i >nul 2>&1
 for /D %%i in (CefSharp.*) do rmdir /q/s %%i >nul 2>&1
 
